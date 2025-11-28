@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji</title>
+    <style>
+        body
+        {
+        background-color:teal;
+
+        }
+        #outer
+        {
+        width:25%;
+        margin: 0 auto;
+        background-color:yellow;
+        }
+    </style>
+</head>
+<body>
+    <div id="outer">
+        <form id="emojiForm">
+            <h1>Emojificator</h1>
+            <label for="textareaemoji">Write here a sentence, which contains emojis:</label> <br>
+            <textarea name="textareaemoji" id="textareaemoji"></textarea>
+            <div>
+                <p id="message" style="color:black; font-weight:bold"></p>
+                <button id="emojidone">Done</button>
+            </div>
+            <label for="review">Write your opinion about my application doen below</label> <br>
+            <textarea name="review" id="review"></textarea>
+            <fieldset id="tip" style="display:none">
+            <label for="tip" >How much tip do you want me to give?</label> <br>
+            <input type="number" id="tiparea" name="tiparea"><p>Forint</p>
+            </fieldset>
+            <p id="messagetwo" style="color:black; font-weight:bold"></p> <br>
+            <button type="submit" id="done">Done</button>
+        </form>
+    </div>
+
+    <script>
+    document.getElementById("emojidone").addEventListener("click", async (e) => {
+      e.preventDefault();
+    const text = document.getElementById("textareaemoji").value;
+    const message = document.getElementById("message");
+    message.textContent = "Processing...";
+     try {
+        const response = await fetch("http://127.0.0.1:5000/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text })
+        });
+        const data = await response.json();
+        message.textContent = data.translation || "No translation returned.";
+         } catch (err) {
+        message.textContent = "Error: " + err.message;
+    }
+
+})
+    document.getElementById("emojiForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const tipField = document.getElementById("tip");
+    const review = document.getElementById("review").value;
+    const messagetwo = document.getElementById("messagetwo");
+    messagetwo.textContent="";
+
+       try{
+        const responsetwo = await fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: review })
+        });
+        const datatwo = await responsetwo.json();
+
+        if (datatwo.sentiment === "positive") {
+            tipField.style.display = "block";
+            messagetwo.textContent="Thank you."
+       } else if (datatwo.sentiment === "negative") {
+          tipField.style.display = "none";
+          messagetwo.textContent = "At least you were honest.";
+        } else {
+          messagetwo.textContent = "Couldn't determine sentiment.";
+        }
+
+    } catch (err) {
+        messagetwo.textContent = "Error: " + err.message;
+    }
+});
+    </script>
+</body>
+</html>
